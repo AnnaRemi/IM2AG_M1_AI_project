@@ -1,17 +1,21 @@
 # Compiler and flags
 CXX = g++
-CXXFLAGS = -Wall -Wextra
-EXEC = test3
+CXXFLAGS = -Wall -Wextra -O2 -std=c++17
+OBJS = main.o Layer.o Matrix.o ActivationFcts.o LossFcts.o
+EXEC = nnproj
 
-$(EXEC): test3.o Layer_version3.o
-	$(CXX) $(CXXFLAGS) -o $(EXEC) test3.o Layer_version3.o
+# Default target
+all: $(EXEC)
 
+# Link the executable
+$(EXEC): $(OBJS)
+	$(CXX) $(OBJS) -o $(EXEC)
 
-Layer_version3.o: Layer_version3.cpp Layer_version3.hpp
-	$(CXX) $(CXXFLAGS) -c Layer_version3.cpp -o Layer_version3.o
+# Compile object files
+%.o: %.cpp
+	$(CXX) $(CXXFLAGS) -c $< -o $@
 
-test3.o: test3.cpp
-	$(CXX) $(CXXFLAGS) -c test3.cpp -o test3.o
+# Clean target
+clean: 
+	rm -f $(OBJS) $(EXEC)
 
-clean:
-	rm -f Layer_version3.o test3.o $(EXEC)
