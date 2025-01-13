@@ -33,7 +33,6 @@ Matrix::Matrix(int r, int c){
         }
         values.push_back(colVals);
     }
-    //std::cout << "Rows: " << numRows << " Cols: " << numCols << std::endl;
 }
 
 Matrix::Matrix(const Matrix &m){
@@ -55,33 +54,23 @@ std::vector<std::vector<double>> Matrix::getValues() const{return values;}
 double Matrix::getValue(int r, int c) const{return values[r][c];}
 
 
-Matrix Matrix::transpose(){
-    
+Matrix Matrix::transpose(){ 
     Matrix m = Matrix(numCols, numRows);
-
     for (int i = 0; i < numRows; ++i) {
         for (int j = 0; j < numCols; ++j) { 
-     
             m.setValue(j ,i, getValue(i,j));
-        }
-        
+        }        
     }
-
     return m;
 }
 
 Matrix Matrix::copy(){
-    
     Matrix m = Matrix(numRows, numCols);
-
     for (int i = 0; i < numRows; ++i) {
         for (int j = 0; j < numCols; ++j) { 
-     
             m.setValue(i , j, getValue(i,j));
         }
-        
     }
-
     return m;
 }
 
@@ -97,7 +86,6 @@ void Matrix::print() const{
         }
         std::cout <<  " ]" << std::endl ;
     }
-    
     std::cout <<  " ]" << std::endl ;
     std::cout <<  " end" << std::endl ;
 }
@@ -106,20 +94,14 @@ Matrix Matrix::operator-(const Matrix& mat2) const{
     if(numRows != mat2.numRows || numCols != mat2.numCols) {
         throw std::invalid_argument("The dimensions do not match");
     }
-
     Matrix result = Matrix(numRows, numCols);
-
     for (int i = 0; i < numRows; ++i) {
         for (int j = 0; j < numCols; ++j) { 
      
             result.setValue(i ,j, getValue(i,j) - mat2.getValue(i,j));
         }
-        
     }
-
     return result;
-
-
 }
 
 Matrix Matrix::operator+(const Matrix& mat2) const{
@@ -139,7 +121,7 @@ Matrix Matrix::operator+(const Matrix& mat2) const{
     return result;
 }
 
-Matrix Matrix::operator+=(const Matrix &mat2){
+Matrix& Matrix::operator+=(const Matrix &mat2){
     *this = *this + mat2;
     return *this;
 }
@@ -190,6 +172,7 @@ Matrix& Matrix::operator=(const Matrix &mat2){
     numCols = mat2.getNumCols();
     numRows = mat2.getNumRows();
     values = mat2.getValues();
+
     return *this;
 }
 
