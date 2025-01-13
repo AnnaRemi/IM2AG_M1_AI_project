@@ -60,11 +60,11 @@ int main(){
 
     // we declare the Matrices that we will use in the train loop
     Matrix output_L1, output_relu, output_L2, output_softmax, y_transpose, dinputs_loss, dinputs_ReLU;
+    double loss;
 
     //Optimizer
-    Optimizer optimizer_SGD;
+    Optimizer optimizer_SGD(.001);
 
-    //std::vector<double> biases(spiral_data.size(), 0.0);
     // First Layer
     Layer L1(2,64);
     // ReLU
@@ -78,12 +78,20 @@ int main(){
 
     // Loss
     LossFcts loss_fct;
+    Matrix y(targets.size(),targets[0].size(),targets);
+    y_transpose = y.transpose();
+
+
     //Train loop
-    for (int epoch = 0; epoch < 100;epoch++){
-        std::cout << "step " << epoch << std::endl;
+    for (int epoch = 0; epoch < 1000;epoch++){
         // Forward pass for the First Layer
+
+        // L1.print_weights();
         L1.forward(spiral_data);
+
+        // L1.print_weights();
         output_L1 = L1.getOutput();
+
         // ReLU activation
         output_relu = act1.ReLU(output_L1);
 
@@ -94,22 +102,21 @@ int main(){
 
         //Softmax activation
         output_softmax = act2.Softmax(output_L2);
-        
-        Matrix y(targets.size(),targets[0].size(),targets);
-        y_transpose = y.transpose();
-        double loss = loss_fct.crossEntropyLoss_forward(output_softmax, y_transpose);
-
-        std::cout <<  "Loss: " << loss << std::endl ;
-        
-        //Accuracy
-        std::vector<int> predictions = output_softmax.argmaxRow();
-        std::vector<int> true_values = y_transpose.argmaxRow();
-        std::vector<int> accuracy;
-        for (long unsigned int j = 0; j < predictions.size(); j++) { 
-            accuracy.push_back(predictions[j] - true_values[j]); 
+        if(epoch%100 == 0){
+            std::cout << "step " << epoch << std::endl;
+            loss = loss_fct.crossEntropyLoss_forward(output_softmax, y_transpose);
+            std::cout <<  "Loss: " << loss << std::endl ;
         }
-        double acc = mean_vector(accuracy);
-        std::cout <<  "Accuracy: " << acc << std::endl ;
+
+        //Accuracy
+        // std::vector<int> predictions = output_softmax.argmaxRow();
+        // std::vector<int> true_values = y_transpose.argmaxRow();
+        // std::vector<int> accuracy;
+        // for (long unsigned int j = 0; j < predictions.size(); j++) { 
+        //     accuracy.push_back(predictions[j] - true_values[j]); 
+        // }
+        // double acc = mean_vector(accuracy);
+        // std::cout <<  "Accuracy: " << acc << std::endl ;
 
         //Backward pass :
         //<=>lossActivation.backward(loss_activation.output, y) in python
@@ -119,10 +126,10 @@ int main(){
 
         //<=>activation1.backward(dense2.dinputs) in python
         dinputs_ReLU = act1.reluDerivative(L2.get_dinputs(), output_L1);
-        //=>dense1.backward(activation1.dinputs) in python
-        std::cout << "here" << std::endl;
 
+        //=>dense1.backward(activation1.dinputs) in python
         L1.backward(dinputs_ReLU.getValues());
+
         //Update weights and biases :
         optimizer_SGD.update_parameters(L1);
         optimizer_SGD.update_parameters(L2);
