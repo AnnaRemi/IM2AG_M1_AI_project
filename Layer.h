@@ -33,7 +33,12 @@ public:
     void multiply();
     void add();
     void forward(std::vector<std::vector<double>> inputs);
+    Matrix getWeights() const;
+    Matrix getBiases() const;
+    Matrix getDweights() const;
+    Matrix getDbiases() const;
     void backward(std::vector<std::vector<double>> dvalues);    
+    void print_weights();
 
 };
 
@@ -43,7 +48,7 @@ class Optimizer{
         double learning_rate;
     public:
         Optimizer(double l=1);
-        void update_parameters(Layer);
+        void update_parameters(Layer&);
 };
 
 #endif // LAYER_H
