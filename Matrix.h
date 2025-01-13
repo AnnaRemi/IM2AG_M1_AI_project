@@ -30,7 +30,7 @@ class Matrix{
         Matrix operator/(const Matrix& mat2) const;
         Matrix divide(int den) const;
         Matrix operator+(const Matrix& mat2) const;
-        Matrix operator+=(const Matrix &mat2);
+        Matrix& operator+=(const Matrix &mat2);
         Matrix operator*(const Matrix &mat2) const;
         Matrix operator*(const double &k) const;
         int operator==(const Matrix &mat2) const;
