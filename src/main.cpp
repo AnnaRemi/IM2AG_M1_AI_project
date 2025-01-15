@@ -23,7 +23,6 @@ double mean_vector(const std::vector<T>& vec){
     for (int i = 0; i < vec.size(); ++i) {
         sum += vec[i];
     }
-    //std::cout << "total " << sum/vec.size() << std::endl;
 
     return static_cast<double>(sum) / vec.size();
 }
@@ -76,7 +75,7 @@ std::vector<std::vector<T>> readCSV(const std::string& file_name){
 
 int main(){
 
-    //Reading vertical data
+    //Reading data
     std::ifstream f("../data/spiral_data.json");
     
     if(!f.is_open()){
