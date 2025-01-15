@@ -23,7 +23,9 @@ double mean_vector(const std::vector<T>& vec){
     for (int i = 0; i < vec.size(); ++i) {
         sum += vec[i];
     }
-    return sum / vec.size();
+    //std::cout << "total " << sum/vec.size() << std::endl;
+
+    return static_cast<double>(sum) / vec.size();
 }
 
 template<typename T>
@@ -46,12 +48,36 @@ void writeToFile( std::vector<std::vector<T>> matrix, std::string file_name){
     }
 }
 
+
+template<typename T>
+std::vector<std::vector<T>> readCSV(const std::string& file_name){
+    std::vector<std::vector<T>> data;
+    std::ifstream file(file_name);
+    std::string line, cell;
+    if (file.is_open()){
+        while(std::getline(file,line) ){
+            std::vector<T> row;
+            std::stringstream lineStream(line);
+            while( std::getline(lineStream,cell,',')){
+                row.push_back(std::stod(cell));
+            }
+            data.push_back(row);
+        }
+        file.close();
+    }
+    else{
+        std::cerr << "Could not open the file" << std::endl;
+    }
+    return data;
+}
+
+
 //std::shared_ptr<Matrix> lpX = std::make_shared<Matrix>(12, 13);
 
 int main(){
 
-    //Reading spiral data
-    std::ifstream f("../data/vertical_data.json");
+    //Reading vertical data
+    std::ifstream f("../data/spiral_data.json");
     
     if(!f.is_open()){
         std::cerr << "Could not open the JSON file";
@@ -62,15 +88,18 @@ int main(){
 
     f.close();
 
-    std::vector<std::vector<double>> vertical_data;
+    std::vector<std::vector<double>> spiral_data;
     std::vector<std::vector<double>> targets;
+    std::vector<std::vector<double>> weights1 = readCSV<double>("../data/wights_data_Layer1.csv");
+    std::vector<std::vector<double>> weights2 = readCSV<double>("../data/wights_data_Layer2.csv");
+
 
     for (const auto& item : data["X"]){
         std::vector<double> row;
         for (const auto& value : item){
             row.push_back(value.get<double>());
         }
-        vertical_data.push_back(row);
+        spiral_data.push_back(row);
     }
 
     for (const auto& item : data["y"]){
@@ -86,107 +115,97 @@ int main(){
 
     std::vector<std::vector<double>> losses_matrix;
     std::vector<std::vector<double>> accuracies_matrix;
-    std::vector<std::vector<int>> predictions_matrix;
+    std::vector<std::vector<double>> predictions_matrix;
 
     //Optimizer
-    GradientDescent optimizer_GD(0.001);
+    GradientDescent optimizer_GD(0.1);
 
     //First Layer
-    Layer L1(2,64);
+    std::shared_ptr<Layer> L1 = std::make_shared<Layer>(2,64, weights1);
+    
     //Second Layer
-    Layer L2(64,3);
+    std::shared_ptr<Layer> L2 = std::make_shared<Layer>(64,3, weights2);
+    
+    //Activation functions
     ActivationFcts act1, act2;
+
+    //Loss function
     LossFcts loss_fct;
 
-    int epochs = 10;
+    
+    int epochs = 100;
     //Train loop
     for (int epoch = 0; epoch < epochs;epoch++){
         std::cout << "step " << epoch+1 << std::endl;
 
-        L1.forward(vertical_data);
-        std::vector<std::vector<double>> output_L1 = L1.getOutput();
+        L1->forward(spiral_data);
+        std::vector<std::vector<double>> output_L1 = L1->getOutput();
         std::shared_ptr<Matrix> mat_output_L1 = std::make_shared<Matrix>(output_L1.size(), output_L1[0].size(), output_L1);
-        //mat_output_L1->print();
 
         //ReLU
         std::shared_ptr<Matrix> output_relu = act1.ReLU(mat_output_L1);
-        //std::cout <<  "output_relu " << output_relu->getNumRows() << " " << output_relu->getNumCols() << std::endl ;
-        //output_relu->print();
-
+      
         //Second Layer
-        L2.forward(output_relu->getValues());
-        std::vector<std::vector<double>> output_L2 = L2.getOutput();
+        L2->forward(output_relu->getValues());
+        std::vector<std::vector<double>> output_L2 = L2->getOutput();
         std::shared_ptr<Matrix> mat_output_L2 = std::make_shared<Matrix>(output_L2.size(), output_L2[0].size(), output_L2);
-
-        
-        //std::cout <<  "output_L2 " << output_L2->getNumRows() << " " << output_L2->getNumCols() << std::endl ;
-        //output_L2->print();
-        
+ 
         //Softmax 
         std::shared_ptr<Matrix> output_softmax = act2.Softmax(mat_output_L2);
-        
-        //std::cout <<  "output_softmax " << output_softmax->getNumRows() << " " << output_softmax->getNumCols() << std::endl ;
-        //output_softmax->print();
-
-        /*std::vector<double> probabilities = output_softmax->sumMat();
-        std::cout <<  "Probabilities" << std::endl ;
-        for (int j = 0; j < probabilities.size(); j++) { 
-            std::cout << probabilities[j] << " " ; 
-        
-        std::cout << std::endl;*/
-
-        
+   
         //Loss
-        
         double loss = loss_fct.crossEntropyLoss_forward(output_softmax, y_transpose);
-        std::cout <<  "Loss: " << loss << std::endl ;
         losses_matrix.push_back({loss});
-        
-        //Accuracy
-        std::vector<int> predictions = output_softmax->argmaxRow();
-        std::vector<int> true_values = y_transpose->argmaxRow();
-        
 
-        std::vector<int> accuracy;
-        for (int j = 0; j < predictions.size(); j++) { 
-            accuracy.push_back(predictions[j] - true_values[j]); 
-        }
+        //Accuracy
+        std::vector<double> predictions = output_softmax->argmaxRow();
+        std::vector<double> true_values;
         
+        if(y_transpose->getNumRows() > 1){
+            true_values = y_transpose->argmaxRow();
+        }
+        else{
+            true_values = y_transpose->getValues()[0];
+        }
+        std::vector<int> accuracy(predictions.size(),0);
+        int sum = 0;
+        for (int j = 0; j < predictions.size(); j++) { 
+            if(predictions[j] == true_values[j]){
+                accuracy[j] = 1;
+                sum++; 
+            }
+        }
+
         double acc = mean_vector(accuracy);
-        std::cout <<  "Accuracy: " << acc << std::endl ;
         accuracies_matrix.push_back({acc});
         predictions_matrix.push_back(predictions);
 
-
-        //std::cout << "Finished forward" << std::endl;
+        if(epoch % 10 == 0){
+            std::cout <<  "Loss: " << loss << std::endl ;
+            std::cout <<  "Accuracy: " << acc << std::endl ;
+        }
+        
+        
         //Backward pass
-    
 
         //Loss cross-entropy with softmax
         std::shared_ptr<Matrix> dinputs_loss = loss_fct.crossEntropyLoss_backward_softmax(output_softmax, y);
         
-        //std::cout << "Before L2 backward" << std::endl;
+        
         //Second layer with softmax dinput
-        L2.backward(dinputs_loss->getValues());
-        std::vector<std::vector<double>> dinputs_L2 = L2.getDinputs();
+        L2->backward(dinputs_loss->getValues());
+        std::vector<std::vector<double>> dinputs_L2 = L2->getDinputs();
         std::shared_ptr<Matrix> mat_dinp_L2 = std::make_shared<Matrix>(dinputs_L2.size(), dinputs_L2[0].size(), dinputs_L2);
-        //std::cout << "Finished L2 backward" << std::endl;
 
         //Relu with second layer dinput
         std::shared_ptr<Matrix> dinputs_relu = act1.reluDerivative(mat_output_L1, mat_dinp_L2);
 
         
-        
-
         //First layer with Relu dinput
-        L1.backward(dinputs_relu->getValues());
-        std::vector<std::vector<double>> dinputs_L1 = L1.getDinputs();
+        L1->backward(dinputs_relu->getValues());
+        std::vector<std::vector<double>> dinputs_L1 = L1->getDinputs();
         std::shared_ptr<Matrix> mat_dinp_L1 = std::make_shared<Matrix>(dinputs_L1.size(), dinputs_L1[0].size(), dinputs_L1);
-        //std::cout <<  " dinputs_L1 numRows " <<  mat_dinp_L1->getNumRows() << std::endl;
-        //std::cout <<  " dinputs_L1 numCols " <<  mat_dinp_L1->getNumCols() << std::endl ;
-        //mat_dinp_L1->print();
-        std::cout << "Finished backward" << std::endl;
-
+       
 
         //Update weights and biases :
         optimizer_GD.update_params(L1);
@@ -194,6 +213,7 @@ int main(){
 
         
     }
+    
 
     //Writting results to file
     writeToFile(losses_matrix,"losses.csv");
@@ -202,21 +222,3 @@ int main(){
     
     return 0;
 }
-
-/*int main(){
-    std::vector<std::vector<double>> i = {{1, 2, 3, 2.5},
-        {2., 5., -1., 2},
-        {-1.5, 2.7, 3.3, -0.8}};
-    std::vector<std::vector<double>> w = {{0.2, 0.8, -0.5, 1},
-        {0.5, -0.91, 0.26, -0.5},
-        {-0.26, -0.27, 0.17, 0.87}};
-    std::vector<double> b = {{2, 3, 0.5}};
-
-    std::shared_ptr<Matrix> inputs = std::make_shared<Matrix>(4, 3, i);
-    std::shared_ptr<Matrix> weights = std::make_shared<Matrix>(4, 3, w);
-    std::shared_ptr<Matrix> biases = std::make_shared<Matrix>(1, 3, b);
-
-
-
-    return 0;
-}*/

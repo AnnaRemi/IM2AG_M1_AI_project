@@ -7,8 +7,6 @@
 #include <algorithm>
 #include <memory>
 
-std::shared_ptr<Matrix> lpX = std::make_shared<Matrix>(12, 13);
-
 double clip(const double &value, const double &min, const double &max) {
    return std::max(min,std::min(value,max));
 }
@@ -51,7 +49,6 @@ double mean_vector(const std::vector<double>& vec){
     return sum / vec.size();
 }
 
-//std::shared_ptr<Matrix> LossFcts::getDinput() const{return dinputs;}
 
 //Cross entropy loss function forward method
 double LossFcts::crossEntropyLoss_forward(std::shared_ptr<Matrix> predictions, std::shared_ptr<Matrix> targets) {
@@ -67,18 +64,7 @@ double LossFcts::crossEntropyLoss_forward(std::shared_ptr<Matrix> predictions, s
         correct_confidences = mat_mult->sumMat();
     }
 
-    /*std::cout <<  "correct_confidences" << std::endl ;
-    for (int j = 0; j < 5; j++) { 
-        std::cout << correct_confidences[j] << " " ; 
-    }
-    std::cout << std::endl ;*/
     std::vector<double> nll = negative_log_likelihood(correct_confidences);
-
-    /*std::cout <<  "nll" << std::endl ;
-    for (int j = 0; j < 5; j++) { 
-        std::cout << nll[j] << " " ; 
-    }
-    std::cout << std::endl ;*/
 
     return mean_vector(nll);
 }
@@ -86,7 +72,6 @@ double LossFcts::crossEntropyLoss_forward(std::shared_ptr<Matrix> predictions, s
 
 //Cross entropy loss function backward method
 std::shared_ptr<Matrix> LossFcts::crossEntropyLoss_backward_softmax(std::shared_ptr<Matrix> dvalues, std::shared_ptr<Matrix> targets) {
-    //std::vector<double> correct_confidences;
     std::shared_ptr<Matrix> dinputs = dvalues->copy();
     if(targets->getValues().size() == 1){
         for (int j = 0; j < targets->getNumCols(); j++) { 

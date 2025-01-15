@@ -16,14 +16,13 @@ Matrix::Matrix(int r, int c, std::vector<std::vector<double>> v){
 double getRandNum(){
     std::random_device dev;
     std::mt19937 gen(dev());
-    std::uniform_int_distribution<> dis(-10,10); 
+    std::uniform_int_distribution<> dis(-100,100); 
     return dis(gen);
 }
 
 Matrix::Matrix(int r, int c){
     numRows = r;
     numCols = c;
-    //std::cout << "Creating matrix" << std::endl;
     values.resize( numRows );
     for (int i = 0; i < numRows; ++i) {
         values[i].resize( numCols );
@@ -31,7 +30,6 @@ Matrix::Matrix(int r, int c){
             values[i][j] = 0.01 * getRandNum();
         }
     }
-    //std::cout << "Rows: " << numRows << " Cols: " << numCols << std::endl;
 }
 
 
@@ -49,9 +47,7 @@ std::vector<std::vector<double>> Matrix::getValues() const{return values;}
 double Matrix::getValue(int r, int c) const{return values[r][c];}
 
 std::shared_ptr<Matrix> Matrix::transpose(){
-    
     std::shared_ptr<Matrix> m = std::make_shared<Matrix>(numCols, numRows);
-
     for (int i = 0; i < numRows; ++i) {
         for (int j = 0; j < numCols; ++j) { 
      
@@ -80,10 +76,9 @@ std::shared_ptr<Matrix> Matrix::copy(){
 
 
 void Matrix::print(){
-    //std::cout <<  " numCols" << numCols << std::endl ;
+   
     std::cout <<  "[ " ;
     for (int i = 0; i < numRows; i++) {
-    //for (int i = 0; i < 5; i++) {
         std::cout <<  "[ " ;
         for (int j = 0; j < numCols; j++) { 
             std::cout << values[i][j] << " " ; 
@@ -100,7 +95,7 @@ std::shared_ptr<Matrix> Matrix::operator-(const Matrix& mat2) const{
         throw std::invalid_argument("The dimensions do not match");
     }
 
-    std::shared_ptr<Matrix> lpX = std::make_shared<Matrix>(12, 13);
+
     std::shared_ptr<Matrix> result = std::make_shared<Matrix>(numRows, numCols);
 
     for (int i = 0; i < numRows; ++i) {
@@ -190,30 +185,6 @@ std::shared_ptr<Matrix> Matrix::divide(int den) const{
     return result;
 }
 
-/*std::shared_ptr<Matrix> Matrix::dotProduct(const Matrix& mat) const{
-    
-    if (numCols != mat.numRows)
-    {
-        throw std::invalid_argument("Invalid dimensions.");
-    }
-
-    int r = numRows;
-    int c = mat.numRows;
-
-    std::shared_ptr<Matrix> result = std::make_shared<Matrix>(numRows,mat.numCols);
-
-    for (int i = 0; i < r; ++i) {
-        for (int j = 0; j < c; ++j) {
-            double sum = 0;
-            for (int k = 0; k < c; ++k) {
-                sum += getValue(i,k) * mat.getValue(k,j);
-            }
-            result->setValue(i,j, sum);
-        }
-    }
-   
-    return result;
-}*/
 
 std::shared_ptr<Matrix> Matrix::dotProduct(const Matrix& mat) const{
 
@@ -277,8 +248,8 @@ int Matrix::argmax(const std::vector<double>& vec) const{
     return std::distance(vec.begin(), std::max_element(vec.begin(),vec.end()));
 }
 
-std::vector<int> Matrix::argmaxRow() const{
-    std::vector<int> result;
+std::vector<double> Matrix::argmaxRow() const{
+    std::vector<double> result;
     for (auto &row : values) {
         result.push_back(argmax(row));
     }

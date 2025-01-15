@@ -59,18 +59,16 @@ std::shared_ptr<Matrix> ActivationFcts::reluDerivative(std::shared_ptr<Matrix> d
    return dinputs;
 }
 
+
 // Softmax function
 std::shared_ptr<Matrix> ActivationFcts::Softmax(std::shared_ptr<Matrix> input) {
    int r = input->getNumRows();
    int c = input->getNumCols();
    
-   //std::cout << "input " << r << std::endl;
-   //std::cout << "input " << c << std::endl;
+   
    std::vector<std::vector<double>> maxVals = maxOfEachRow(input->getValues());
-   //std::cout << "maxVals " << maxVals.size() << std::endl;
-   //std::cout << "maxVals " << maxVals[0].size() << std::endl;
+   
    std::shared_ptr<Matrix> maxVals_mat = std::make_shared<Matrix>(maxVals.size(), maxVals[0].size(), maxVals);
-   //std::cout << "maxVals_mat " << maxVals_mat->getNumCols() << std::endl;
 
    std::shared_ptr<Matrix> subts_mat = *input - *maxVals_mat;
 
