@@ -51,11 +51,13 @@ std::shared_ptr<Matrix> ActivationFcts::reluDerivative(std::shared_ptr<Matrix> d
    int r = inputs->getNumRows();
    int c = inputs->getNumCols();
 
+
    for (int i = 0; i < r; ++i) {
       for (int j = 0; j < c; ++j) {
-         dinputs->setValue(i,j, inputs->getValue(i, j) > 0 ? 1.0 : 0.0);
+         dinputs->setValue(i,j, dinputs->getValue(i, j) > 0 ? inputs->getValue(i, j): 0.0);
       }
    }
+  
    return dinputs;
 }
 

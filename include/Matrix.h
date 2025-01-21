@@ -36,9 +36,10 @@ class Matrix{
         std::vector<double> sumMat() const;
         std::vector<std::vector<double>> sumRowsMat() const;
         int argmax(const std::vector<double>& vec) const;
-        std::vector<int> argmaxRow() const;
+        std::vector<double> argmaxRow() const;
         std::vector<std::vector<double>> sumOverRows() const;
         std::vector<std::vector<double>> sumOverCols() const;
+        
         
 
     

@@ -54,6 +54,7 @@ double mean_vector(const std::vector<double>& vec){
 double LossFcts::crossEntropyLoss_forward(std::shared_ptr<Matrix> predictions, std::shared_ptr<Matrix> targets) {
     std::vector<double> correct_confidences;
     std::shared_ptr<Matrix> clipped_prediction = clip(predictions->getValues(), 1e-7, 1 - 1e-7);
+    
     if(targets->getValues().size() == 1){
         for (int j = 0; j < targets->getNumCols(); j++) { 
             correct_confidences.push_back(predictions->getValue(j, targets->getValue(0,j)));
@@ -65,7 +66,9 @@ double LossFcts::crossEntropyLoss_forward(std::shared_ptr<Matrix> predictions, s
     }
 
     std::vector<double> nll = negative_log_likelihood(correct_confidences);
-
+    
+   
+    
     return mean_vector(nll);
 }
 
@@ -73,11 +76,29 @@ double LossFcts::crossEntropyLoss_forward(std::shared_ptr<Matrix> predictions, s
 //Cross entropy loss function backward method
 std::shared_ptr<Matrix> LossFcts::crossEntropyLoss_backward_softmax(std::shared_ptr<Matrix> dvalues, std::shared_ptr<Matrix> targets) {
     std::shared_ptr<Matrix> dinputs = dvalues->copy();
-    if(targets->getValues().size() == 1){
-        for (int j = 0; j < targets->getNumCols(); j++) { 
-            dinputs->setValue(j,  targets->getValue(0,j), dinputs->getValue(j, targets->getValue(0,j))-1);
-        } 
+
+    /*for (int j = 295; j < dvalues->getNumRows(); j++) { 
+        int target_idx = targets->getValue(j,0);
+        std::cout << "target_idx" << target_idx << std::endl;
+    } */
+
+    for (int j = 0; j < dvalues->getNumRows(); j++) { 
+        int target_idx = targets->getValue(j,0);
+        dinputs->setValue(j, target_idx, dinputs->getValue(j, target_idx) - 1);
+    } 
+    
+    /*std::cout << "dinputs inside lossfcts" << std::endl;
+    std::cout <<  "[ " ;
+    for (int i = 294; i < dinputs->getNumRows(); i++) {
+        std::cout <<  "[ " ;
+        for (int j = 0; j < dinputs->getNumCols(); j++) { 
+            std::cout << dinputs->getValue(i,j) << " " ; 
+        }
+        std::cout <<  " ]" << std::endl ;
     }
+    
+    std::cout <<  " ]" << std::endl ;
+    std::cout <<  " end" << std::endl ;*/
 
     return dinputs->divide(dvalues->getNumRows());
 }

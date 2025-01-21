@@ -16,7 +16,7 @@ Matrix::Matrix(int r, int c, std::vector<std::vector<double>> v){
 double getRandNum(){
     std::random_device dev;
     std::mt19937 gen(dev());
-    std::uniform_int_distribution<> dis(-100,100); 
+    std::normal_distribution<> dis(0,1); 
     return dis(gen);
 }
 
@@ -197,19 +197,34 @@ std::shared_ptr<Matrix> Matrix::dotProduct(const Matrix& mat) const{
     int r = numRows;
     int c = mat.numCols;
 
-    std::shared_ptr<Matrix> result = std::make_shared<Matrix>(numRows,mat.numCols);
+    std::vector<std::vector<double>> result(numRows, std::vector<double>(mat.numCols, 0.0));
 
     for (int i = 0; i < r; ++i) {
         for (int j = 0; j < c; ++j) {
-            double sum = 0;
+            //double sum = 0;
             for (int k = 0; k < numCols; ++k) {
-                sum += getValue(i,k) * mat.getValue(k,j);
+                result[i][j] += getValue(i,k) * mat.getValue(k,j);
             }
-            result->setValue(i,j, sum);
+            //result->setValue(i,j, sum);
         }
     }
 
-    return result;
+    /*std::cout << "Result dot product vector" << std::endl;
+    std::cout <<  "[ " ;
+    for (int i = 0; i < 1; i++) {
+        std::cout <<  "[ " ;
+        for (int j = 0; j < result[0].size(); j++) { 
+            std::cout << result[i][j] << " " ; 
+        }
+        std::cout <<  " ]" << std::endl ;
+    }
+    
+    std::cout <<  " ]" << std::endl ;
+    std::cout <<  " end" << std::endl ;*/
+    
+    std::shared_ptr<Matrix> mat_result = std::make_shared<Matrix>(numRows,mat.numCols, result);
+
+    return mat_result;
 }
 
 std::vector<double> Matrix::sumMat() const{
@@ -258,18 +273,21 @@ std::vector<double> Matrix::argmaxRow() const{
 }
 
 //axis = 0
-std::vector<std::vector<double>> Matrix::sumOverRows() const{
-    std::vector<double> result(numCols, 0.0);
-
+std::vector<std::vector<double>> Matrix::sumOverRows() const
+{
     
+
+    std::vector<std::vector<double>> result(1, std::vector<double>(numCols, 0.0));
+
     for (int i = 0; i < numRows; ++i) {
         for (int j = 0; j < numCols; ++j) { 
-            result[j] += values[i][j];
-            
+            result[0][j] += values[i][j];
         }
     }
 
-    return {result};
+    
+
+    return result;
 }
 
 //axis = 1
