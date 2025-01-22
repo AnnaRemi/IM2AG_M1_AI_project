@@ -8,9 +8,7 @@ GradientDescent::GradientDescent(double lr){
     learning_rate = lr;
 }
 
-
-
-void GradientDescent::update_params(std::shared_ptr<Layer> layer){
+void GradientDescent::update_params(std::shared_ptr<Layer> layer, int num_l){
     std::vector<std::vector<double>> weights = layer->getWeights();
     std::vector<std::vector<double>> dweights = layer->getDweights();
     std::vector<std::vector<double>> biases = layer->getBiases();
@@ -84,11 +82,85 @@ std::vector<std::vector<double>> RandomVec(int rows, int cols, double minVal = -
     return matrix;
 }
 
-void RandomUpdate::update_params(std::shared_ptr<Layer> layer){
+void RandomUpdate::update_params(std::shared_ptr<Layer> layer, int num_l){
     //std::cout << "In update " << layer->getWeights().size() << std::endl;
     // Random weight and bias updates
     layer->setWeights(RandomVec(layer->getWeights().size(), layer->getWeights()[0].size()));
     layer->setBiases(RandomVec(layer->getBiases().size(), layer->getBiases()[0].size()));
+}
+
+
+GradientDescentWithDecay::GradientDescentWithDecay(double lr, double dec){
+    learning_rate = lr;
+    current_learning_rate = lr;
+    decay= dec;
+    iterations = 0;
+}
+
+void GradientDescentWithDecay::pre_update_params(){
+    if(decay){
+        current_learning_rate = learning_rate * ( 1 / (1 + decay * iterations));
+        //std::cout << "current_learning_rate " << current_learning_rate << std::endl;
+    }
+    
+}
+
+void GradientDescentWithDecay::update_params(std::shared_ptr<Layer> layer, int num_l) {
+    std::vector<std::vector<double>> weights = layer->getWeights();
+    std::vector<std::vector<double>> dweights = layer->getDweights();
+    std::vector<std::vector<double>> biases = layer->getBiases();
+    std::vector<std::vector<double>> dbiases = layer->getDbiases();
+
+
+    
+    /*std::cout << "dweights" << std::endl;
+    std::cout <<  "[ " ;
+    for (int i = 0; i < dweights.size(); i++) {
+        std::cout <<  "[ " ;
+        for (int j = 0; j < dweights[0].size(); j++) { 
+            std::cout << dweights[i][j] << " " ; 
+        }
+        std::cout <<  " ]" << std::endl ;
+    }
+    
+    std::cout <<  " ]" << std::endl ;
+    std::cout <<  " end" << std::endl ;*/
+
+    
+    for (int i = 0; i < weights.size(); ++i) {
+        for (int j = 0; j < weights[0].size(); ++j) { 
+            weights[i][j] += (- learning_rate * dweights[i][j]);
+        }
+    }
+    
+    //std::cout << "dbiases" << dbiases.size() << " " << dbiases[0].size() << std::endl;
+    //std::cout << "biases" << biases.size() << " " << biases[0].size() << std::endl;
+    for (int i = 0; i < biases.size(); ++i) {
+        for (int j = 0; j < biases[0].size(); ++j) { 
+            biases[i][j] += (- learning_rate * dbiases[i][j]);
+        }
+    }
+    
+    /*std::cout << "dbiases" << std::endl;
+    std::cout <<  "[ " ;
+    for (int i = 0; i < dbiases.size(); i++) {
+        std::cout <<  "[ " ;
+        for (int j = 0; j < dbiases[0].size(); j++) { 
+            std::cout << dbiases[i][j] << " " ; 
+        }
+        std::cout <<  " ]" << std::endl ;
+    }
+    
+    std::cout <<  " ]" << std::endl ;
+    std::cout <<  " end" << std::endl ;*/
+
+    
+    layer->setWeights(weights);
+    layer->setBiases(biases);
+}
+
+void GradientDescentWithDecay::post_update_params(){
+   iterations++;
 }
 
 
@@ -109,11 +181,12 @@ double Adam::getCurrent_learning_rate(){
 void Adam::pre_update_params(){
     if(decay){
         current_learning_rate = learning_rate * ( 1 / (1 + decay * iterations));
+        //std::cout << "current_learning_rate " << current_learning_rate << std::endl;
     }
     
 }
 
-void Adam::update_params(std::shared_ptr<Layer> layer){
+void Adam::update_params(std::shared_ptr<Layer> layer, int num_l){
     std::vector<std::vector<double>> weight_momentums = layer->getWeightMomentums();
     std::vector<std::vector<double>> weight_cache = layer->getWeightCache();
     std::vector<std::vector<double>> bias_momentums = layer->getBiasMomentums();
@@ -129,11 +202,37 @@ void Adam::update_params(std::shared_ptr<Layer> layer){
     std::vector<std::vector<double>> weight_cache_corrected(weight_cache.size(), std::vector<double>(weight_cache[0].size(), 0.0));
     std::vector<std::vector<double>> bias_cache_corrected(bias_cache.size(), std::vector<double>(bias_cache[0].size(), 0.0));
 
+    std::cout << "dweights layer " << num_l << std::endl;
+    std::cout <<  "[ " ;
+    for (int i = 0; i < dweights.size(); i++) {
+        std::cout <<  "[ " ;
+        for (int j = 0; j < dweights[0].size(); j++) { 
+            std::cout << dweights[i][j] << " " ; 
+        }
+        std::cout <<  " ]" << std::endl ;
+    }
+    
+    std::cout <<  " ]" << std::endl ;
+    std::cout <<  " end" << std::endl ;
+    
     for (int i = 0; i < weight_momentums.size(); ++i) {
         for (int j = 0; j < weight_momentums[0].size(); ++j) { 
             weight_momentums[i][j] = beta_1 * weight_momentums[i][j] + ( 1 - beta_1) * dweights[i][j];
         }
     }
+
+    std::cout << "weight_momentums layer " << num_l << std::endl;
+    std::cout <<  "[ " ;
+    for (int i = 0; i < weight_momentums.size(); i++) {
+        std::cout <<  "[ " ;
+        for (int j = 0; j < weight_momentums[0].size(); j++) { 
+            std::cout << weight_momentums[i][j] << " " ; 
+        }
+        std::cout <<  " ]" << std::endl ;
+    }
+    
+    std::cout <<  " ]" << std::endl ;
+    std::cout <<  " end" << std::endl ;
 
     for (int i = 0; i < bias_momentums.size(); ++i) {
         for (int j = 0; j < bias_momentums[0].size(); ++j) { 

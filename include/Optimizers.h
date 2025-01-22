@@ -20,7 +20,7 @@ class Optimizers {
          * @brief Pure virtual method for updating parameters of a layer.
          * @param layer Reference to the layer whose parameters are to be updated.
          */
-        virtual void update_params(std::shared_ptr<Layer> layer) = 0;
+        virtual void update_params(std::shared_ptr<Layer> layer, int num_l) = 0;
 };
 
 /**
@@ -51,7 +51,7 @@ class Adam: public Optimizers{
          *          biases += -learning_rate * dbiases;
          */
         void pre_update_params();
-        void update_params(std::shared_ptr<Layer> layer);
+        void update_params(std::shared_ptr<Layer> layer, int num_l);
         void post_update_params();
         double getCurrent_learning_rate();
 
@@ -78,9 +78,23 @@ class GradientDescent: public Optimizers{
          *          weights += -learning_rate * dweights;
          *          biases += -learning_rate * dbiases;
          */
-        void update_params(std::shared_ptr<Layer> layer);
+        void update_params(std::shared_ptr<Layer> layer, int num_l);
 };
 
+class GradientDescentWithDecay : public Optimizers {
+    private:
+        double learning_rate;
+        double current_learning_rate;
+        double decay;
+        int iterations;
+
+    public:
+        GradientDescentWithDecay(double learning_rate, double decay);
+        void pre_update_params();
+        void update_params(std::shared_ptr<Layer> layer, int num_l);
+        void post_update_params();
+
+};
 
 /**
  * @class RandomUpdate
@@ -93,7 +107,7 @@ class RandomUpdate: public Optimizers{
          * @brief Updates the parameters (weights and biases) of a given layer at random.
          * @param layer Shared pointer to the layer whose parameters are to be updated.
          */
-        void update_params(std::shared_ptr<Layer> layer);
+        void update_params(std::shared_ptr<Layer> layer, int num_l);
 };
 
 

@@ -248,6 +248,7 @@ void Layer::backward(std::vector<std::vector<double>> dvalues){
     
    
     dweights = mat_dweights->getValues();
+    
     /*std::cout << "dweights layer backward" << std::endl;
     std::cout <<  "[ " ;
     for (int i = 0; i < dweights.size(); i++) {
@@ -262,6 +263,7 @@ void Layer::backward(std::vector<std::vector<double>> dvalues){
     std::cout <<  " end" << std::endl ;*/
 
     dbiases = mat_dvalues->sumOverRows();
+    
     /*std::cout << "dbiases layer backward" << std::endl;
     std::cout <<  "[ " ;
     for (int i = 0; i < dbiases.size(); i++) {

@@ -16,9 +16,6 @@
 using json = nlohmann::json;
 
 
-
-
-
 template <typename T>
 double mean_vector(const std::vector<T> &vec)
 {
@@ -96,27 +93,6 @@ std::vector<double> readPointFromConsole()
 
 int main(int argc, char *argv[])
 {
-    /*std::vector<std::vector<double>> mat1 = {{1,2,3,2.5},{2.,5.,-1.,2},{-1.5,2.7,3.3,-0.8}};
-    std::shared_ptr<Matrix> mat_mat1 = std::make_shared<Matrix>(mat1.size(), mat1[0].size(), mat1);
-    std::vector<std::vector<double>> dbiases = mat_mat1->sumOverRows();
-    std::cout << "dbiases" << std::endl;
-    std::cout <<  "[ " ;
-    for (int i = 0; i < dbiases.size(); i++) {
-        std::cout <<  "[ " ;
-        for (int j = 0; j < dbiases[0].size(); j++) { 
-            std::cout << dbiases[i][j] << " " ; 
-        }
-        std::cout <<  " ]" << std::endl ;
-    }
-    
-    std::cout <<  " ]" << std::endl ;
-    std::cout <<  " end" << std::endl ;
-    
-    std::vector<std::vector<double>> mat2 = {{0.2,0.8,-0.5,1},{0.5,-0.91,0.26,-0.5},{-0.26,-0.27,0.17,0.87}};
-    
-    std::shared_ptr<Matrix> mat_mat2 = std::make_shared<Matrix>(mat2.size(), mat2[0].size(), mat2);
-    std::shared_ptr<Matrix> mult = mat_mat1->transpose()->dotProduct(*mat_mat2);
-    mult->print();*/
 
     if (argc < 2)
     {
@@ -144,13 +120,11 @@ int main(int argc, char *argv[])
     std::vector<std::vector<double>> spiral_data;
     std::vector<std::vector<double>> targets;
     Matrix mat_weights1 = Matrix(2,64);
-    //std::cout << "Layer 1 weights" << std::endl;
-    //mat_weights1.print();
-    std::vector<std::vector<double>> weights1 = mat_weights1.getValues();//readCSV<double>("../data/wights_data_Layer1_3n.csv");//
+    
+    std::vector<std::vector<double>> weights1 = readCSV<double>("../data/wights_data_Layer1.csv");//mat_weights1.getValues();
     Matrix mat_weights2 = Matrix(64,3);
-    //std::cout << "Layer 2 weights" << std::endl;
-    //mat_weights2.print();
-    std::vector<std::vector<double>> weights2 = mat_weights2.getValues();//readCSV<double>("../data/wights_data_Layer2_3n.csv");// 
+   
+    std::vector<std::vector<double>> weights2 = readCSV<double>("../data/wights_data_Layer2.csv");// mat_weights2.getValues();
 
     for (const auto &item : data["X"])
     {
@@ -180,14 +154,28 @@ int main(int argc, char *argv[])
     std::vector<std::vector<double>> predictions_matrix;
 
     // Optimizer
-    GradientDescent optimizer_GD(0.5);
+    //GradientDescent optimizer_GD(0.5);
+    GradientDescentWithDecay optimizer_SGD(1,1e-3);
     //Adam optimizer_Adam(0.02,1e-5,1e-7,0.9,0.999);
     //RandomUpdate random;
 
     // First Layer
     std::shared_ptr<Layer> L1 = std::make_shared<Layer>(2, 64, weights1);
     
+    /*std::cout << "L1->getDbiases() at beginning" << std::endl;
+    std::cout <<  "[ " ;
+    for (int i = 0; i < L1->getDbiases().size(); i++) {
+        std::cout <<  "[ " ;
+        for (int j = 0; j < L1->getDbiases()[0].size(); j++) { 
+            std::cout << L1->getDbiases()[i][j] << " " ; 
+        }
+        std::cout <<  " ]" << std::endl ;
+    }
+    
+    std::cout <<  " ]" << std::endl ;
+    std::cout <<  " end" << std::endl ;*/
 
+    
     // Second Layer
     std::shared_ptr<Layer> L2 = std::make_shared<Layer>(64, 3, weights2);
     
@@ -414,15 +402,20 @@ int main(int argc, char *argv[])
             std::cout <<  " end" << std::endl ;*/
 
             // Update weights and biases with GD:
-            optimizer_GD.update_params(L1);
-            optimizer_GD.update_params(L2);
+            //optimizer_GD.update_params(L1);
+            //optimizer_GD.update_params(L2);
             //random.update_params(L1);
             //random.update_params(L2);
 
             /*optimizer_Adam.pre_update_params();
-            optimizer_Adam.update_params(L1);
-            optimizer_Adam.update_params(L2);
+            optimizer_Adam.update_params(L1, 1);
+            optimizer_Adam.update_params(L2,2);
             optimizer_Adam.post_update_params();*/
+            
+            optimizer_SGD.pre_update_params();
+            optimizer_SGD.update_params(L1,1);
+            optimizer_SGD.update_params(L2,2);
+            optimizer_SGD.post_update_params();
 
             /*std::cout << "L1->getWeights()" << std::endl;
             std::cout <<  "[ " ;
@@ -435,9 +428,9 @@ int main(int argc, char *argv[])
             }
             
             std::cout <<  " ]" << std::endl ;
-            std::cout <<  " end" << std::endl ;
+            std::cout <<  " end" << std::endl ;*/
 
-            std::cout << "L1->getBiases()" << std::endl;
+            /*std::cout << "L1->getBiases()" << std::endl;
             std::cout <<  "[ " ;
             for (int i = 0; i < L1->getBiases().size(); i++) {
                 std::cout <<  "[ " ;
